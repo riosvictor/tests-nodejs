@@ -28,26 +28,25 @@ describe("authenticate user", () => {
   });
 
   it("not found email", async () => {
-    expect(async () => {
-      await useCase.execute({
+    await expect(useCase.execute({
         ...userData,
         email: "batatinha@email.com"
       })
-    })
+    )
       .rejects
-      .toBeInstanceOf(IncorrectEmailOrPasswordError);
+      .toEqual(new IncorrectEmailOrPasswordError());
   });
 
   it("password is wrong", async () => {
     await userUseCase.execute(userData);
 
-    expect(async () => {
+    await expect(async () => {
       await useCase.execute({
         ...userData,
         password: "banana"
       })
     })
       .rejects
-      .toBeInstanceOf(IncorrectEmailOrPasswordError);
+      .toEqual(new IncorrectEmailOrPasswordError());
   });
 })

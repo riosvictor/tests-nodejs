@@ -26,8 +26,8 @@ describe("create user", () => {
   it("user email already exists", async () => {
     await useCase.execute(userData);
 
-    expect(async () => await useCase.execute(userData))
+    await expect(async () => await useCase.execute(userData))
       .rejects
-      .toBeInstanceOf(CreateUserError);
+      .toEqual(new CreateUserError());
   });
 })

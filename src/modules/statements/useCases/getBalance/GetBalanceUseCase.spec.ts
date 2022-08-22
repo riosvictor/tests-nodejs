@@ -34,8 +34,8 @@ describe("get balance", () => {
   });
 
   it("user not found", async () => {
-    expect(async () => await useCase.execute({user_id: '123'}))
+    await expect(useCase.execute({user_id: '123'}))
       .rejects
-      .toBeInstanceOf(GetBalanceError);
+      .toEqual(new GetBalanceError());
   });
 })

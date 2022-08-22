@@ -60,13 +60,13 @@ describe("make deposit or withdraw", () => {
   });
 
   it("user not found", async () => {
-    expect(async () => await useCase.execute(statementData))
+    await expect(useCase.execute(statementData))
       .rejects
-      .toBeInstanceOf(CreateStatementError.UserNotFound);
+      .toEqual(new CreateStatementError.UserNotFound());
   });
 
   it("insufficient founds", async () => {
-    expect(async () => {
+    await expect(async () => {
       const user = await userUseCase.execute(userData);
 
       statementData.user_id = user.id!;
@@ -81,6 +81,6 @@ describe("make deposit or withdraw", () => {
       await useCase.execute(statementData);
     })
       .rejects
-      .toBeInstanceOf(CreateStatementError.InsufficientFunds);
+      .toEqual(new CreateStatementError.InsufficientFunds());
   });
 })

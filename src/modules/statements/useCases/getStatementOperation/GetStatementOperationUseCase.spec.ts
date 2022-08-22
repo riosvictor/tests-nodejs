@@ -52,18 +52,17 @@ describe("get operation", () => {
   });
 
   it("user not found", async () => {
-    expect(async () =>
-      await useCase.execute({
+    await expect(useCase.execute({
         statement_id: '123',
         user_id: '123'
       })
     )
       .rejects
-      .toBeInstanceOf(GetStatementOperationError.UserNotFound);
+      .toEqual(new GetStatementOperationError.UserNotFound());
   });
 
   it("statement not found", async () => {
-    expect(async () => {
+    await expect(async () => {
       const user = await userUseCase.execute(userData);
 
       await useCase.execute({
@@ -72,6 +71,6 @@ describe("get operation", () => {
       })
     })
       .rejects
-      .toBeInstanceOf(GetStatementOperationError.StatementNotFound);
+      .toEqual(new GetStatementOperationError.StatementNotFound());
   });
 })

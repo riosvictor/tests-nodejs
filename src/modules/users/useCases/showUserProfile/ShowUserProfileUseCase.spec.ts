@@ -28,8 +28,8 @@ describe("profile user", () => {
   });
 
   it("user email already exists", async () => {
-    expect(async () => await useCase.execute('1'))
+    await expect(useCase.execute('1'))
       .rejects
-      .toBeInstanceOf(ShowUserProfileError);
+      .toEqual(new ShowUserProfileError());
   });
 })
