@@ -7,4 +7,6 @@ Pick<
   'description' |
   'amount' |
   'type'
->
+> & {
+  receiver_user_id?: string
+}
