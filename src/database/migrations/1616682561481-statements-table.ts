@@ -1,4 +1,5 @@
 import { MigrationInterface, QueryRunner, Table } from "typeorm";
+import { OperationType } from "../../modules/statements/entities/Statement";
 
 export class accountsTable1616682561481 implements MigrationInterface {
 
@@ -28,7 +29,7 @@ export class accountsTable1616682561481 implements MigrationInterface {
         {
           name: 'type',
           type: 'enum',
-          enum: ['deposit', 'withdraw']
+          enum: Object.values(OperationType)
         },
         {
           name: 'created_at',

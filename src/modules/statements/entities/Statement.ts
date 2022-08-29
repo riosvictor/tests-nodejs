@@ -13,7 +13,7 @@ import { User } from '../../users/entities/User';
 export enum OperationType {
   DEPOSIT = 'deposit',
   WITHDRAW = 'withdraw',
-  TRANSFER = 'transfer',
+  TRANSFER = 'transfer'
 }
 
 @Entity('statements')

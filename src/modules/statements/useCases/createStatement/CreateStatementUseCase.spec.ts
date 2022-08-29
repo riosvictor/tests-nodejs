@@ -4,8 +4,9 @@ import { OperationType } from "../../entities/Statement";
 import { InMemoryStatementsRepository } from "../../repositories/in-memory/InMemoryStatementsRepository";
 import { CreateStatementError } from "./CreateStatementError";
 import { CreateStatementUseCase } from "./CreateStatementUseCase";
+import { ICreateStatementDTO } from "./ICreateStatementDTO";
 
-describe("make deposit or withdraw", () => {
+describe("make deposit, withdraw or transfer", () => {
   let repoStatement;
   let repoUser;
   let useCase: CreateStatementUseCase;
@@ -15,13 +16,6 @@ describe("make deposit or withdraw", () => {
     name: "John Doe",
     email: "john@email.com",
     password: "123456"
-  };
-
-  const statementData = {
-    user_id: '123',
-    description: "deposit",
-    amount: 100,
-    type: OperationType.DEPOSIT
   };
 
   beforeEach(() => {
@@ -35,9 +29,12 @@ describe("make deposit or withdraw", () => {
   it("success insert value", async () => {
     const user = await userUseCase.execute(userData);
 
-    statementData.user_id = user.id!;
-
-    const statement = await useCase.execute(statementData);
+    const statement = await useCase.execute({
+      amount: 100,
+      type: OperationType.DEPOSIT,
+      description: 'deposit',
+      user_id: user.id!,
+    });
 
     expect(statement).not.toBeNull();
     expect(statement).toHaveProperty("id");
@@ -46,39 +43,105 @@ describe("make deposit or withdraw", () => {
   it("success remove value", async () => {
     const user = await userUseCase.execute(userData);
 
-    statementData.user_id = user.id!;
+    await useCase.execute({
+      amount: 100,
+      type: OperationType.DEPOSIT,
+      description: 'deposit',
+      user_id: user.id!,
+    });
 
-    await useCase.execute(statementData);
-
-    statementData.description = "withdraw";
-    statementData.type = OperationType.WITHDRAW;
-
-    const statement = await useCase.execute(statementData);
+    const statement = await useCase.execute({
+      amount: 100,
+      type: OperationType.WITHDRAW,
+      description: 'withdraw',
+      user_id: user.id!,
+    });
 
     expect(statement).not.toBeNull();
     expect(statement).toHaveProperty("id");
   });
 
   it("user not found", async () => {
-    await expect(useCase.execute(statementData))
+    await expect(useCase.execute({
+      amount: 100,
+      type: OperationType.WITHDRAW,
+      description: 'withdraw',
+      user_id: '123',
+    }))
       .rejects
       .toEqual(new CreateStatementError.UserNotFound());
   });
 
-  it("insufficient founds", async () => {
+  it("withdraw insufficient founds", async () => {
     await expect(async () => {
       const user = await userUseCase.execute(userData);
 
-      statementData.user_id = user.id!;
-      statementData.amount = 50;
+      await useCase.execute({
+        amount: 50,
+        description: 'deposit',
+        type: OperationType.DEPOSIT,
+        user_id: user.id!,
+      });
 
-      await useCase.execute(statementData);
+      await useCase.execute({
+        amount: 100,
+        description: 'withdraw',
+        type: OperationType.WITHDRAW,
+        user_id: user.id!,
+      });
+    })
+      .rejects
+      .toEqual(new CreateStatementError.InsufficientFunds());
+  });
 
-      statementData.description = "withdraw";
-      statementData.type = OperationType.WITHDRAW;
-      statementData.amount = 100;
+  it("success transfer value", async () => {
+    const user = await userUseCase.execute(userData);
+    const receiver = await userUseCase.execute({
+      ...userData,
+      email: 'batatinha@gmail.com',
+    });
 
-      await useCase.execute(statementData);
+    await useCase.execute({
+      amount: 100,
+      description: 'deposit',
+      type: OperationType.DEPOSIT,
+      user_id: user.id!,
+    });
+
+    const statement = await useCase.execute({
+      amount: 50,
+      description: 'transfer',
+      type: OperationType.TRANSFER,
+      user_id: user.id!,
+      receiver_user_id: receiver.id!,
+    });
+
+    expect(statement).not.toBeNull();
+    expect(statement).toHaveProperty("id");
+  });
+
+  it("transfer insufficient found", async () => {
+    await expect(async () => {
+      const user = await userUseCase.execute(userData);
+      const receiver = await userUseCase.execute({
+        ...userData,
+        email: 'batatinha@gmail.com',
+      });
+
+      await useCase.execute({
+        amount: 50,
+        description: 'deposit',
+        type: OperationType.DEPOSIT,
+        user_id: user.id!,
+      });
+
+      await useCase.execute({
+        amount: 100,
+        description: 'transfer',
+        type: OperationType.TRANSFER,
+        user_id: user.id!,
+        receiver_user_id: receiver.id!,
+      });
     })
       .rejects
       .toEqual(new CreateStatementError.InsufficientFunds());

@@ -98,4 +98,52 @@ describe('Get Balance Controller', () => {
       message: 'JWT token is missing!',
     });
   })
+
+  it('get balance with one transfer', async () => {
+    const depositData = {
+      amount: '100.00',
+      description: 'first transfer'
+    };
+    const receiverData = {
+      ...userData,
+      email: 'receiver@example.com',
+    }
+
+    await request(app)
+      .post('/api/v1/users')
+      .send(userData);
+
+    await request(app)
+      .post('/api/v1/users')
+      .send(receiverData);
+
+    const { body: { token } } = await request(app)
+      .post('/api/v1/sessions')
+      .send(userData);
+    const { body: { user } } = await request(app)
+      .post('/api/v1/sessions')
+      .send(receiverData);
+
+    await request(app)
+      .post('/api/v1/statements/deposit')
+      .set('Authorization', `Bearer ${token}`)
+      .send(depositData);
+
+    await request(app)
+      .post(`/api/v1/statements/transfers/${user.id}`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({
+        amount: 80,
+        description: `first transfer from ${userData.email} to ${receiverData.email}`
+      });
+
+    const response = await request(app)
+      .get('/api/v1/statements/balance')
+      .set('Authorization', `Bearer ${token}`);
+
+    expect(response.status).toBe(200);
+    expect(response.body.statement).toHaveLength(2);
+    expect(response.body.statement[0]).not.toHaveProperty('sender_id');
+    expect(response.body.statement[1]).toHaveProperty('sender_id');
+  })
 })
